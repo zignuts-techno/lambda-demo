@@ -1,0 +1,64 @@
+service: lambda-demo
+frameworkVersion: '2'
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: ap-south-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action: 
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: 'arn:aws:dynamodb:ap-south-1:*:*'
+  lambdaHashingVersion: '20201221'
+
+functions:
+  postImage:
+    handler: functions/postImage.fn
+    description: Post image
+    events:
+      - http:
+          path: images/post
+          method: post
+          cors: true
+  getImages:
+    handler: functions/getImages.fn
+    description: Get image
+    events:
+      - http:
+          path: images/get
+          method: get
+          cors: true
+resources: # CloudFormation template syntax
+  Resources:
+    imagesTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        TableName: demoImages
+        AttributeDefinitions:
+          - 
+            AttributeName: id
+            AttributeType: S
+          - 
+            AttributeName: createdAt
+            AttributeType: N
+        KeySchema:
+          - 
+            AttributeName: id
+            KeyType: HASH
+          -
+            AttributeName: createdAt
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+plugins:
+  - serverless-offline
